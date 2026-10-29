@@ -5,7 +5,6 @@
 **Selected Problem Statement:** **PS-Q1 — Biomedical Signal Classification (ECG Arrhythmia Detection)**  
 **Common Tasks Included:** **Task A (Bell-State Preparation & Fidelity)** and **Task B (Processor D Design & QFT-3 Benchmark)**  
 **Track:** Quantum Machine Learning (QML)  
-**Submission Portal:** [https://qffsrmap2026.com/learning/hackathon](https://qffsrmap2026.com/learning/hackathon)  
 **Noise Model:** Organizer Benchmark `QFF2026-v2`  
 **Fixed Random Seed:** `42`  
 
