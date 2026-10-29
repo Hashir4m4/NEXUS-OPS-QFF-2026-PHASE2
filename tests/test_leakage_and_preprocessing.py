@@ -85,9 +85,43 @@ def test_preprocessing_reproducibility():
     assert np.array_equal(run1, run2), "Preprocessing is non-deterministic"
 
 
+def test_synthetic_violation_detection():
+    """
+    Adversarial regression test: ensures that if an engineer or pipeline
+    accidentally contaminates the StandardScaler with validation or test features,
+    the leakage detection strictly detects the discrepancy and raises an error.
+    """
+    train_df = pd.read_csv(DATA / "ecg_train.csv")
+    val_df = pd.read_csv(DATA / "ecg_val.csv")
+    test_df = pd.read_csv(DATA / "ecg_test_features.csv")
+
+    feature_cols = [c for c in train_df.columns if c != "label"]
+    X_train = train_df[feature_cols].to_numpy(dtype=np.float64)
+    X_val = val_df[feature_cols].to_numpy(dtype=np.float64)
+    X_test = test_df[feature_cols].to_numpy(dtype=np.float64)
+
+    from sklearn.preprocessing import StandardScaler
+    # Ground truth clean scaler (train only)
+    clean_scaler = StandardScaler().fit(X_train)
+
+    # 1. Contaminated with validation set
+    contaminated_val_scaler = StandardScaler().fit(np.vstack([X_train, X_val]))
+    val_diff = np.max(np.abs(clean_scaler.mean_ - contaminated_val_scaler.mean_))
+    assert val_diff > 1e-4, f"Leakage detector failed to detect validation contamination (diff={val_diff})"
+
+    # 2. Contaminated with test set
+    contaminated_test_scaler = StandardScaler().fit(np.vstack([X_train, X_test]))
+    test_diff = np.max(np.abs(clean_scaler.mean_ - contaminated_test_scaler.mean_))
+    assert test_diff > 1e-4, f"Leakage detector failed to detect test feature contamination (diff={test_diff})"
+
+    # 3. Assert test features file strictly contains no ground truth label column
+    assert "label" not in test_df.columns, "Data leak: test features CSV contains ground truth label column!"
+
+
 if __name__ == "__main__":
     test_preprocessing_artifacts_exist()
     test_no_leakage_scaler_and_pca()
     test_angle_scaler_bounds()
     test_preprocessing_reproducibility()
+    test_synthetic_violation_detection()
     print("All preprocessing & leakage tests passed successfully.")

@@ -17,21 +17,21 @@ NEXUS-OPS delivers an end-to-end, scientifically grounded, fully reproducible Qu
 
 | Metric / Benchmark | Classical Baseline (Logistic Regression) | 4-Qubit VQC (Ideal Simulation) | 4-Qubit VQC (Noisy `QFF2026-v2`, 8192 shots) |
 | :--- | :--- | :--- | :--- |
-| **Validation Macro-F1** | **1.0000** | **0.9979** | **0.9965** |
-| **Validation Accuracy** | **1.0000** | **0.9980** | **0.9967** |
-| **Validation Precision (Macro)** | 1.0000 | 0.9983 | 0.9972 |
-| **Validation Recall (Macro)** | 1.0000 | 0.9975 | 0.9958 |
-| **Confusion Matrix (Normal / Arrhythmia)** | [899, 0] / [0, 601] | [899, 0] / [3, 598] | [899, 0] / [5, 596] |
+| **Validation Macro-F1** | **1.0000** | **0.9993** | **0.9993** |
+| **Validation Accuracy** | **1.0000** | **0.9993** | **0.9993** |
+| **Validation Precision (Macro)** | 1.0000 | 0.9994 | 0.9994 |
+| **Validation Recall (Macro)** | 1.0000 | 0.9992 | 0.9992 |
+| **Confusion Matrix (Normal / Arrhythmia)** | [899, 0] / [0, 601] | [899, 0] / [1, 600] | [899, 0] / [1, 600] |
 | **Trainable Parameters** | 31 | 24 | 24 |
 | **Circuit Depth** | N/A | 8 (raw) / 13 (transpiled) | 13 (transpiled to `rx, ry, rz, cx`) |
-| **Training Time** | 1.155 s | 40.08 s (10 epochs, 6,000 samples) | Pretrained weights evaluated under noise |
+| **Training Time** | 0.255 s | 44.37 s (10 epochs, 6,000 samples) | Evaluated on AerSimulator (39.06s) |
 
 ### Common Tasks Official Results:
 - **Task A (Bell State $|\Phi^+\rangle$):**
   - **Ideal Fidelity:** $1.0000 \pm 0.0000$
   - **Noisy Fidelity (`QFF2026-v2`):** $0.8801 \pm 0.0026$ ($\langle XX \rangle = +0.8191$, $\langle YY \rangle = -0.8279$, $\langle ZZ \rangle = +0.8735$)
 - **Task B (Processor D — `nexus_ops_ring4_v1`):**
-  - **Topology:** 4-qubit bidirectional cyclic ring (matches 4-qubit cyclic ansatz with **0 SWAP overhead**)
+  - **Topology:** 4-qubit bidirectional cyclic ring (uniform degree 2 minimizes spectator crosstalk; layer 0 cyclic entangling is native with 0 SWAPs; layer 1 range-2 entanglers incur 1 routing SWAP)
   - **QFT-3 Benchmark Ideal Fidelity:** **1.000000**
   - **QFT-3 Benchmark Noisy Fidelity (`QFF2026-v2`):** **0.626784**
   - **QFT-3 Circuit Depth:** 6 (before transpile) $\rightarrow$ 21 (after transpile)
@@ -171,9 +171,9 @@ jupyter nbconvert --to notebook --execute solution.ipynb --output solution.ipynb
 | **G4 Notebook** | Gate | `solution.ipynb` executes end-to-end without errors. |
 | **G5 Leakage** | Gate | All scaling and PCA parameters fitted strictly on `ecg_train.csv`. Verified by `test_leakage_and_preprocessing.py`. |
 | **C1 Quantum Design** | 30 pts | 4-qubit register, $R_y$ angle encoding, 2 StronglyEntanglingLayers (24 parameters). Empirical resource accounting and PCA justification. |
-| **C2 Results Quality** | 25 pts | Honest classical vs quantum comparison. Classical Macro-F1 = 1.0000; VQC Macro-F1 = 0.9979. Consistent validation metrics. |
-| **C3 Noise Analysis** | 20 pts | Task A fidelity ($0.8801 \pm 0.0026$). Noisy VQC under `QFF2026-v2` ($0.9965$ Macro-F1, transpiled to `rx, ry, rz, cx`, 8192 shots). |
-| **C4 Processor D** | 15 pts | `nexus_ops_ring4_v1` bidirectional ring. Passes `qff_qml_benchmark.py`. Zero SWAP overhead for cyclic ansatz. QFT-3 noisy fidelity = 0.6268. |
+| **C2 Results Quality** | 25 pts | Honest classical vs quantum comparison. Classical Macro-F1 = 1.0000; VQC Macro-F1 = 0.9993. Consistent validation metrics. |
+| **C3 Noise Analysis** | 20 pts | Task A fidelity ($0.8801 \pm 0.0026$). Noisy VQC under `QFF2026-v2` ($0.9993$ Macro-F1, transpiled to `rx, ry, rz, cx`, 8192 shots). |
+| **C4 Processor D** | 15 pts | `nexus_ops_ring4_v1` bidirectional ring. Passes `qff_qml_benchmark.py`. Analyzed routing: Layer 0 has 0 SWAPs; Layer 1 incurs 1 routing SWAP. QFT-3 noisy fidelity = 0.6268 (1 SWAP). |
 | **C5 Reproducibility** | 10 pts | Pinned `requirements-lock.txt`, `SEED=42`, complete `results.md`, automated test suite. |
 | **Bonus Points** | +5 pts | Extensive 5-configuration ablation study (depth, dimension, parameters) and clinical problem framing. |
 

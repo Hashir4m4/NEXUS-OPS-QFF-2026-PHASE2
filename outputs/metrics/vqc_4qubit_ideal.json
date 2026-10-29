@@ -1,77 +1,24 @@
 {
     "model": "4-qubit hybrid VQC",
     "simulator": "PennyLane default.qubit",
-    "noise_condition": "ideal",
+    "noise_condition": "ideal_noiseless",
     "dataset": "QFF2026 Phase 2 PS-Q1",
     "seed": 42,
     "qubits": 4,
     "layers": 2,
     "trainable_parameters": 24,
-    "epochs": 10,
-    "batch_size": 64,
-    "learning_rate": 0.03,
-    "training_samples": 6000,
-    "validation_samples": 1500,
-    "pca_explained_variance": 0.812804,
-    "pca_variance_per_component": [
-        0.479367,
-        0.213588,
-        0.070255,
-        0.049595
-    ],
-    "accuracy": 0.998,
-    "macro_f1": 0.9979160868371246,
-    "macro_precision": 0.9983370288248337,
-    "macro_recall": 0.997504159733777,
+    "accuracy": 0.9993333333333333,
+    "macro_f1": 0.9993057480818976,
+    "macro_precision": 0.9994444444444445,
+    "macro_recall": 0.9991680532445923,
     "confusion_matrix": [
         [
             899,
             0
         ],
         [
-            3,
-            598
+            1,
+            600
         ]
-    ],
-    "classification_report": {
-        "Normal": {
-            "precision": 0.9966740576496674,
-            "recall": 1.0,
-            "f1-score": 0.9983342587451416,
-            "support": 899.0
-        },
-        "Arrhythmia": {
-            "precision": 1.0,
-            "recall": 0.9950083194675541,
-            "f1-score": 0.9974979149291076,
-            "support": 601.0
-        },
-        "accuracy": 0.998,
-        "macro avg": {
-            "precision": 0.9983370288248337,
-            "recall": 0.997504159733777,
-            "f1-score": 0.9979160868371246,
-            "support": 1500.0
-        },
-        "weighted avg": {
-            "precision": 0.9980066518847006,
-            "recall": 0.998,
-            "f1-score": 0.9979991636561839,
-            "support": 1500.0
-        }
-    },
-    "epoch_losses": [
-        0.11856131912793105,
-        0.060952669444646404,
-        0.06067855275137225,
-        0.06026103975461792,
-        0.06026543374869315,
-        0.06021774234808381,
-        0.06008876120484998,
-        0.060282778497786516,
-        0.06017575054601442,
-        0.06010307094154154
-    ],
-    "training_time_seconds": 40.075,
-    "total_time_seconds": 40.379
+    ]
 }

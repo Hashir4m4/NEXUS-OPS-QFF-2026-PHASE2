@@ -1,4 +1,4 @@
-actual_label,predicted_label
+true_label,predicted_label
 0,0
 1,1
 1,1

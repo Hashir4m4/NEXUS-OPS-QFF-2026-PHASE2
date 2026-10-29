@@ -12,13 +12,16 @@ import pandas as pd
 import pennylane as qml
 
 ROOT = Path(__file__).resolve().parents[2]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-DATA = KIT / "data" / "q1"
-TOOLS = KIT / "tools"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-OUT_PRED = ROOT / "outputs" / "predictions"
-OUT_MODEL = ROOT / "outputs" / "models"
-OUT_PRED.mkdir(parents=True, exist_ok=True)
+from src.utils.config import get_dataset_dir, get_output_dir, get_tools_dir
+
+DATA = get_dataset_dir(problem="q1")
+TOOLS = get_tools_dir()
+
+OUT_PRED = get_output_dir("predictions")
+OUT_MODEL = get_output_dir("models")
 
 
 def main():

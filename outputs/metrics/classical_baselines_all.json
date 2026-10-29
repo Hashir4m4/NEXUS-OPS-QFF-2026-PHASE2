@@ -1,0 +1,87 @@
+{
+    "Logistic Regression (Baseline)": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ],
+        "training_time_seconds": 0.2552
+    },
+    "Linear SVM": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ],
+        "training_time_seconds": 0.0356
+    },
+    "RBF SVM": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ],
+        "training_time_seconds": 0.0742
+    },
+    "Random Forest": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ],
+        "training_time_seconds": 0.7687
+    },
+    "Logistic Regression (4 PCA components)": {
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "macro_precision": 1.0,
+        "macro_recall": 1.0,
+        "confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ],
+        "training_time_seconds": 0.0529
+    }
+}

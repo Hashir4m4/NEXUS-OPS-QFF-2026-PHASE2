@@ -21,8 +21,12 @@ from sklearn.metrics import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-sys.path.insert(0, str(KIT / "noise_model"))
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.utils.config import get_dataset_dir, get_output_dir, get_noise_model_dir
+
+sys.path.insert(0, str(get_noise_model_dir()))
 
 from benchmark_noise_model import (
     get_benchmark_noise_model,
@@ -32,10 +36,9 @@ from benchmark_noise_model import (
     SEED
 )
 
-DATA = KIT / "data" / "q1"
-OUT_MODEL = ROOT / "outputs" / "models"
-OUT_METRICS = ROOT / "outputs" / "metrics"
-OUT_METRICS.mkdir(parents=True, exist_ok=True)
+DATA = get_dataset_dir(problem="q1")
+OUT_MODEL = get_output_dir("models")
+OUT_METRICS = get_output_dir("metrics")
 
 
 def build_vqc_circuit(x, weights):

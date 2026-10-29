@@ -78,3 +78,12 @@ def get_noise_model_dir() -> Path:
         raise FileNotFoundError(f"Official noise model directory not found: {nm_dir}")
     return nm_dir
 
+
+
+def get_output_dir(subdir: str = "") -> Path:
+    """Returns the path to the project outputs directory (or subfolder)."""
+    p = get_project_root() / "outputs"
+    if subdir:
+        p = p / subdir
+    p.mkdir(parents=True, exist_ok=True)
+    return p

@@ -32,14 +32,15 @@ LEARNING_RATE = 0.03
 np.random.seed(SEED)
 
 ROOT = Path(__file__).resolve().parents[2]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-DATA = KIT / "data" / "q1"
+import sys
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-OUT_MODEL = ROOT / "outputs" / "models"
-OUT_METRICS = ROOT / "outputs" / "metrics"
+from src.utils.config import get_dataset_dir, get_output_dir
 
-for folder in [OUT_MODEL, OUT_METRICS]:
-    folder.mkdir(parents=True, exist_ok=True)
+DATA = get_dataset_dir(problem="q1")
+OUT_MODEL = get_output_dir("models")
+OUT_METRICS = get_output_dir("metrics")
 
 
 def create_circuit(n_qubits=N_QUBITS):
