@@ -3,13 +3,22 @@
     "simulator": "Qiskit AerSimulator (noise_model=QFF2026-v2)",
     "noise_condition": "noisy_benchmark",
     "noise_model_version": "QFF2026-v2",
+    "single_qubit_depolarizing": 0.01,
+    "two_qubit_depolarizing": 0.05,
+    "readout_error": 0.02,
     "shots_per_sample": 8192,
+    "dataset": "QFF2026 Phase 2 PS-Q1",
     "seed": 42,
     "qubits": 4,
     "layers": 2,
     "trainable_parameters": 24,
+    "circuit_depth_transpiled": 15,
+    "two_qubit_gate_count": 8,
+    "validation_samples": 1500,
     "accuracy": 1.0,
     "macro_f1": 1.0,
+    "macro_precision": 1.0,
+    "macro_recall": 1.0,
     "confusion_matrix": [
         [
             899,
@@ -19,5 +28,63 @@
             0,
             601
         ]
-    ]
+    ],
+    "classification_report": {
+        "Normal": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 899.0
+        },
+        "Arrhythmia": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 601.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 1500.0
+        },
+        "weighted avg": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1-score": 1.0,
+            "support": 1500.0
+        }
+    },
+    "simulation_time_seconds": 27.125,
+    "transpile_time_seconds": 5.701,
+    "total_time_seconds": 33.1,
+    "ideal_vs_noisy_comparison": {
+        "ideal_macro_f1": 1.0,
+        "noisy_macro_f1": 1.0,
+        "macro_f1_delta": 0.0,
+        "ideal_accuracy": 1.0,
+        "noisy_accuracy": 1.0,
+        "accuracy_delta": 0.0,
+        "ideal_confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ],
+        "noisy_confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                0,
+                601
+            ]
+        ]
+    }
 }

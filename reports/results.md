@@ -1,171 +1,166 @@
 # QFF2026 QML Track — Results Report
 
-**Team name:** NEXUS-OPS  
-**Selected PS:** [x] PS-Q1  [ ] PS-Q2  [ ] PS-Q3  
-**Date:** October 30, 2026  
-**Dependency versions:**
-```text
-numpy==2.4.6
-pandas==3.1.0
-pennylane==0.44.1
-PennyLane-qiskit==0.44.1
-pennylane_lightning==0.45.0
-qiskit==2.3.0
-qiskit_aer==0.17.2
-scikit_learn==1.9.1
-```
-**Noise model version:** QFF2026-v2  
-
----
+**Team:** NEXUS-OPS  
+**Selected problem statement:** PS-Q1 — Biomedical ECG Signal Classification  
+**Report date:** October 30, 2026  
+**Noise model:** QFF2026-v2
 
 ## 1. Approach Summary
 
-NEXUS-OPS tackles PS-Q1 (Biomedical ECG Signal Classification) using a hybrid quantum–classical pipeline designed for robustness, NISQ compliance, and clinical interpretability. The 30 morphological and statistical heartbeat features (derived from 5 segments of 35 samples around the R-peak) are standardized and projected onto the top 4 principal components fitted strictly on training data (`ecg_train.csv`), capturing 81.28% of total variance while eliminating noise dimensions. These 4 features are angle-encoded onto a 4-qubit quantum register via $R_y(\theta)$ rotations ($\theta \in [0, \pi]$), followed by a 2-layer `StronglyEntanglingLayers` variational ansatz containing 24 trainable Euler rotation parameters and periodic CNOT entanglers. Classification is performed by measuring the single-qubit expectation value $\langle Z_0 \rangle \in [-1, 1]$, mapped monotonically to the probability of Arrhythmia $P(\text{Arrhythmia}) = (\langle Z_0 \rangle + 1) / 2$. This architecture balances expressive representation with shallow circuit depth (depth 13 transpiled), ensuring noise resilience against depolarizing and readout errors.
+NEXUS-OPS addresses PS-Q1 with a hybrid quantum–classical classification pipeline. The supplied dataset contains 30 statistical heartbeat features modelled on MIT-BIH statistics; these are feature vectors, not raw ECG recordings or direct patient recordings from MIT-BIH.
 
----
+The VQC preprocessing pipeline standardizes the 30 input features, projects them to four principal components, and scales the components for angle encoding. The PCA model was fitted on the training partition. The four components retain **81.28%** of the training-set variance.
 
-## 2. Results
+The classifier uses four qubits. Four input values are encoded with \(R_y\) rotations. The custom **NEXUS-Ring4** ansatz has two layers of trainable single-qubit Euler rotations (`qml.Rot`, equivalent to a Z–Y–Z rotation sequence) and bidirectional circular CNOT entanglers. It has **24 trainable parameters**. The measured expectation value of \(Z_0\) is mapped to an Arrhythmia score using:
 
-### Classical baseline
-Official metric: Macro-averaged F1-score on `ecg_val.csv` (1,500 samples: 899 Normal, 601 Arrhythmia). Preprocessing fitted strictly on `ecg_train.csv`.
+\[
+P(\mathrm{Arrhythmia}) = \frac{\langle Z_0\rangle+1}{2}.
+\]
 
-| Model | Official metric (Macro-F1) | Accuracy | Training Time | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **Logistic Regression (Baseline)** | **1.0000** | **1.0000** | **0.255 s** | Standardized features, L-BFGS, max_iter=2000, seed=42. 100% linear separability. |
-| Linear SVM | 1.0000 | 1.0000 | 0.036 s | Linear kernel, C=1.0, seed=42. |
-| RBF SVM | 1.0000 | 1.0000 | 0.074 s | Non-linear radial basis kernel, C=1.0, seed=42. |
-| Random Forest | 1.0000 | 1.0000 | 0.769 s | 100 estimators, max_depth=None, seed=42. |
-| Logistic Regression (4 PCA components) | 1.0000 | 1.0000 | 0.053 s | Confirms that the 4-dimensional PCA subspace retains 100% linear separability. |
+This is a custom ansatz; it is **not** PennyLane's built-in `StronglyEntanglingLayers` template.
 
-### Quantum / hybrid model
-Official metric: Macro-averaged F1-score on `ecg_val.csv`.
+## 2. PS-Q1 Classification Results
 
-| Configuration | Ideal | Noisy (benchmark) | Notes |
-| :--- | :--- | :--- | :--- |
-| **NEXUS-Ring4 Custom VQC (2 Layers, 24 params)** | **1.0000** | **1.0000** | Handcrafted bidirectional ring ansatz. Trained on 4,800 train beats, checkpointed on 1,200 internal holdout beats. Evaluated on independent `ecg_val.csv`. Ideal: 0 FP, 0 FN. Noisy (`QFF2026-v2`, 8192 shots): 0 FP, 0 FN. |
+The official evaluation partition contains 1,500 labelled validation examples: 899 Normal (class 0) and 601 Arrhythmia (class 1). The reported metric is macro-averaged F1.
 
-#### Confusion Matrix Comparison on `ecg_val.csv` (1,500 beats):
-- **Ideal Simulation:**
-  - Normal (Class 0): TN = 899, FP = 0 (Precision = 1.0000, Recall = 1.0000)
-  - Arrhythmia (Class 1): FN = 0, TP = 601 (Precision = 1.0000, Recall = 1.0000)
-  - Accuracy: **1.0000** | Macro-F1: **1.0000**
-- **Noisy Simulation (QFF2026-v2, 8192 shots):**
-  - Normal (Class 0): TN = 899, FP = 0 (Precision = 1.0000, Recall = 1.0000)
-  - Arrhythmia (Class 1): FN = 0, TP = 601 (Precision = 1.0000, Recall = 1.0000)
-  - Accuracy: **1.0000** | Macro-F1: **1.0000**
-  - Noise Dynamics: Bidirectional ring structure maintains robust negative margin for normal beats ($\langle Z_0 \rangle \approx -0.75$) and positive margin for arrhythmia beats ($\langle Z_0 \rangle \approx +0.35$), with zero threshold crossing under depolarizing and readout noise.
+### Classical reference models
 
-### Noise mitigation (PS-Q3 required; optional for PS-Q1/Q2)
-*Note: In accordance with the official QFF 2026 rubric, error mitigation is mandatory only for PS-Q3 and optional for PS-Q1. Because the unmitigated noisy performance under QFF2026-v2 achieves Macro-F1 = 1.0000 with 0 FP and 0 FN, additional error mitigation routines are mathematically redundant.*
+| Model | Validation accuracy | Validation macro-F1 | Verification status |
+|---|---:|---:|---|
+| Logistic Regression | 1.0000 | 1.0000 | Independently reproduced |
+| Decision Tree (max depth 5) | 1.0000 | 1.0000 | Independently reproduced |
 
----
+The supplied validation data are unusually easy to separate: a single-feature threshold using `w5_mean` also achieved 1.0000 validation accuracy and macro-F1 in the diagnostic audit. These results are important context when interpreting the VQC result.
 
-## 3. Task A — Bell state |Φ+⟩ (required)
+Other baseline results and training times previously listed in this report are omitted because they have not been independently verified in this audit.
 
-Produced by `task_a_bell()` in `benchmark/qff_qml_benchmark.py` (8192 shots per basis).
+### Quantum classifier
 
-**Fidelity definition used:** $F = (1 + \langle XX \rangle - \langle YY \rangle + \langle ZZ \rangle) / 4$, with $\langle P \rangle = (N_{\text{even}} - N_{\text{odd}})/N$, $\text{SE}(\langle P \rangle) = \sqrt{(1 - \langle P \rangle^2)/N}$ and $\text{SE}(F) = \sqrt{\text{SE}_{XX}^2 + \text{SE}_{YY}^2 + \text{SE}_{ZZ}^2}/4$. ($P(00)+P(11)$ is a population, not a fidelity, and is not accepted.)
+| Evaluation | Accuracy | Macro-F1 | Confusion matrix |
+|---|---:|---:|---|
+| Ideal VQC | 1.0000 | 1.0000 | `[[899, 0], [0, 601]]` |
+| Noisy VQC, QFF2026-v2, 8,192 shots/sample | 1.0000 | 1.0000 | `[[899, 0], [0, 601]]` |
 
-| Condition | ⟨XX⟩ ± SE | ⟨YY⟩ ± SE | ⟨ZZ⟩ ± SE | F ± SE |
-| :--- | :--- | :--- | :--- | :--- |
-| **Ideal** | +1.0000 ± 0.0000 | -1.0000 ± 0.0000 | +1.0000 ± 0.0000 | **1.0000 ± 0.0000** |
-| **Noisy (benchmark)** | +0.8191 ± 0.0063 | -0.8279 ± 0.0062 | +0.8735 ± 0.0054 | **0.8801 ± 0.0026** |
+The fresh noisy evaluation was rerun using the project's noisy-evaluation script and the organizer's QFF2026-v2 noise model. It evaluated all 1,500 validation examples. The generated JSON metrics and prediction CSV were independently checked: both contain 1,500 rows, no missing predictions, and metrics consistent with the confusion matrix above.
 
-### Noise and Entanglement Interpretation (3–5 sentences):
-Under the organizer benchmark noise model (`QFF2026-v2`), the Bell-state fidelity drops from the ideal $1.0000$ to $0.8801 \pm 0.0026$, in exact concordance with theoretical noise compounding across the preparation circuit ($H + CX$). The two-qubit depolarizing error ($p_2 = 0.05$) contracts the state towards the maximally mixed state $I/4$, reducing both diagonal coherence ($\langle ZZ \rangle = 0.8735$) and off-diagonal superposition coherences ($\langle XX \rangle = 0.8191, \langle YY \rangle = -0.8279$). Notably, $\langle XX \rangle$ and $\langle YY \rangle$ exhibit greater degradation than $\langle ZZ \rangle$ because the measurement basis rotations ($H$ and $S^\dagger H$) introduce additional single-qubit depolarizing errors ($p_1 = 0.01$). Finally, the symmetric readout bit-flip error ($p_{\text{readout}} = 0.02$) attenuates all measured parity expectations by a factor of $(1 - 2p_{\text{readout}})^2 \approx 0.9216$, showing that measurement fidelity is as critical to quantum state tomography as gate fidelity.
+The noisy run used 8,192 shots per example, or 12,288,000 shots in total. The recorded run reported approximately 5.70 seconds for transpilation and 27.12 seconds for simulation. These are measurements from this run, not general hardware-performance estimates.
 
----
+### Interpretation
 
-## 4. Processor D Benchmark (Task B)
+The VQC retained perfect validation performance in this particular noisy simulation run. However, Logistic Regression and a shallow Decision Tree also achieved perfect validation scores, and the `w5_mean` feature alone separated the validation classes. Therefore, these results demonstrate that the VQC can solve the supplied benchmark under the tested simulator noise; **they do not demonstrate quantum advantage or superiority over classical machine learning**.
 
-Produced by `python benchmark/qff_qml_benchmark.py configs/processor_d_config.json`.
+## 3. Task A — Bell State \(|\Phi^+\rangle\)
 
-**QFT-3 fidelity definition used:** mean over the 8 computational-basis inputs $|j\rangle$ of $F_j = \langle \psi_j | \rho_j | \psi_j \rangle$, where $\psi_j = \text{QFT}|j\rangle$ (ideal) and $\rho_j$ is the density matrix of the 3 logical qubits after the transpiled circuit runs under the benchmark noise model (gate noise; no measurement). Ideal must be 1.0.
+Task A was run using the organizer-provided `task_a_bell()` helper with 8,192 shots per measurement basis. The fidelity was calculated using the required correlation formula:
 
-**Processor ID:** `nexus_ops_ring4_v1`  
-**n_qubits:** 4  
-**Topology:** `ring` (bidirectional 4-qubit cyclic loop)
+\[
+F = \frac{1+\langle XX\rangle-\langle YY\rangle+\langle ZZ\rangle}{4}.
+\]
 
-| Benchmark | Value |
-| :--- | :--- |
-| QFT-3 depth (before transpile) | 6 |
-| QFT-3 depth (after transpile) | 21 |
+The standard error was propagated from the three correlation standard errors.
+
+| Condition | \(\langle XX\rangle\) | \(\langle YY\rangle\) | \(\langle ZZ\rangle\) | Fidelity |
+|---|---:|---:|---:|---:|
+| Ideal | +1.0000 ± 0.0000 | −1.0000 ± 0.0000 | +1.0000 ± 0.0000 | **1.0000 ± 0.0000** |
+| Noisy, QFF2026-v2 | +0.8191 ± 0.0063 | −0.8279 ± 0.0062 | +0.8735 ± 0.0054 | **0.8801 ± 0.0026** |
+
+Two independent direct executions of the official helper reproduced the saved Task A values. The noisy fidelity is lower than the ideal value, consistent with the effect of the organizer's gate and readout noise. The observed correlations quantify the degradation; this report does not attribute the difference between individual correlators to a specific noise mechanism without separate controlled experiments.
+
+## 4. Task B — Processor D / QFT-3 Benchmark
+
+The Processor D configuration was validated and the organizer's QFT-3 benchmark was independently rerun using the official command:
+
+`python benchmark/qff_qml_benchmark.py configs/processor_d_config.json`
+
+| Benchmark metric | Result |
+|---|---:|
+| Processor ID | `nexus_ops_ring4_v1` |
+| Physical qubits | 4 |
+| Coupling topology | Bidirectional ring |
+| QFT-3 depth before transpilation | 6 |
+| QFT-3 depth after transpilation | 21 |
 | Two-qubit gate count | 12 |
 | SWAP overhead | 1 |
-| Fidelity (ideal) | 1.000000 |
-| Fidelity (noisy) | 0.626784 |
-| Coupling map direction | Bidirectional (all 4 physical edges listed in both directions) |
+| Ideal fidelity | 1.000000 |
+| Noisy fidelity | 0.626784 |
+| Benchmark noise model | QFF2026-v2 |
 
-### Topology Analysis & Rationale (2–4 sentences):
-The 4-qubit bidirectional ring (`nexus_ops_ring4_v1`) provides ideal architectural alignment with our custom `NEXUS-Ring4` classification circuit: Layer 1 forward circular entanglers (CX(0,1), CX(1,2), CX(2,3), CX(3,0)) and Layer 2 reverse circular entanglers (CX(1,0), CX(2,1), CX(3,2), CX(0,3)) map directly to native physical edges, achieving **exactly 0 SWAP routing overhead** and a transpiled depth of 15. Bidirectional links eliminate the 4-Hadamard reversal overhead on reversed CNOTs, preventing depolarizing noise accumulation ($4 \times 0.01$). For the non-local QFT-3 benchmark, the ring topology requires only a single routing SWAP (12 CX gates, transpiled depth 21), yielding an ideal fidelity of 1.0000 and noisy fidelity of 0.6268 under the severe $p_2=0.05$ two-qubit depolarizing regime.
+The official benchmark rerun reproduced the recorded values. The QFT-3 benchmark result is separate from the PS-Q1 classifier's noisy validation result; the two tasks use different circuits and evaluation procedures.
 
----
+The ring coupling map also matches the circular entangling connectivity used by the custom NEXUS-Ring4 classifier circuit. For the classifier circuit, the verified QFF2026-v2 transpilation produced depth 15, eight CNOT gates, and zero SWAP gates. For QFT-3, the official benchmark reported one SWAP.
 
-## 5. Resource Costs
+## 5. VQC Circuit and Resource Summary
 
-| Resource | Value |
-| :--- | :--- |
-| **Qubits used** | 4 |
-| **Circuit depth (raw ansatz)** | 8 (4 single-qubit rotation steps + 4 two-qubit entangling steps) |
-| **Circuit depth (transpiled to rx, ry, rz, cx)** | 15 |
-| **Two-qubit gates (raw)** | 8 CNOTs (4 per layer) |
-| **Two-qubit gates (transpiled)** | 8 CNOTs |
-| **Trainable parameters** | 24 ($2 \text{ layers} \times 4 \text{ qubits} \times 3 \text{ Euler angles}$) |
-| **Training time (approx)** | 24.93 seconds (10 epochs, 75 batches/epoch on 4,800 beats, Adam lr=0.03) |
-| **Total circuit evaluations (training)** | 750 batch evaluations on statevector simulator |
-| **Total circuit evaluations (noisy validation)** | 1,500 circuits transpiled and simulated on AerSimulator ($8,192$ shots/circuit = 12,288,000 total shots) |
+| Resource | Verified value |
+|---|---:|
+| Qubits | 4 |
+| Ansatz layers | 2 |
+| Trainable parameters | 24 |
+| Logical circuit depth (PennyLane resource specification) | 11 |
+| QFF2026-v2 transpiled depth | 15 |
+| Transpiled two-qubit gates | 8 CNOT gates |
+| Transpiled SWAP gates | 0 |
+| Noisy validation examples | 1,500 |
+| Shots per noisy validation example | 8,192 |
+| Total noisy validation shots | 12,288,000 |
 
----
+The logical depth and transpiled depth refer to different circuit representations and should not be compared as if they were measured at the same compilation stage. The transpiled depth and gate counts above refer to the actual trained circuit evaluated by the noisy-evaluation implementation.
 
-## 6. Limitations and Honest Assessment
+## 6. Dataset, Validation, and Limitations
 
-1. **Separability vs. Quantum Advantage:**  
-   The PS-Q1 dataset (derived from 30 summary statistics of MIT-BIH segments) is linearly separable in both its original 30-dimensional space and in the 4-dimensional PCA projection. Consequently, a classical Logistic Regression baseline attains a Macro-F1 of 1.0000 in 1.15 seconds. While our 4-qubit VQC achieves a competitive Macro-F1 of 0.9979 (ideal) and 0.9965 (noisy), there is no empirical quantum supremacy on this specific feature-engineered dataset. Rather, the quantum model demonstrates exceptional inductive bias and noise robustness, learning a faithful non-linear decision boundary with only 24 parameters.
+1. **Dataset provenance.** The challenge documentation describes the supplied heartbeat feature vectors as modelled on MIT-BIH statistics. The supplied files do not establish that these are raw patient recordings or direct patient-level extracts from MIT-BIH.
 
-2. **Dimensionality Reduction Trade-off:**  
-   Compressing 30 features into 4 PCA dimensions discards 18.72% of the original variance. While this retained subspace contains complete class separation for Arrhythmia detection, subtle clinical morphologic features (e.g. minor ST-segment variations) present in higher-order PCs are sacrificed to fit the 4-qubit NISQ constraint.
+2. **Strong class separability.** Logistic Regression, a shallow Decision Tree, and even a threshold on `w5_mean` achieved perfect validation performance in the independent diagnostic checks. The VQC's perfect score must be interpreted in this context. No claim of quantum advantage is supported.
 
-3. **Simulation vs. Real Physical Hardware:**  
-   All noisy experiments were executed via Qiskit Aer simulation using the organizers' `QFF2026-v2` noise model. While the model rigorously captures depolarizing and readout noise, physical superconducting hardware exhibits time-dependent parameter drift, non-Markovian $1/f$ flux noise, spectator qubit crosstalk, and thermal relaxation ($T_1$) effects that may further degrade deep circuits.
+3. **Patient-level independence cannot be confirmed from the supplied CSVs.** The supplied partitions contain no patient identifier, so patient-level separation cannot be independently audited from these files. Exact feature-row duplicate checks found no cross-partition duplicates; this does not prove patient-level independence or rule out near-duplicates.
 
----
+4. **Internal holdout preprocessing caveat.** The VQC preprocessing objects were fitted on the training partition before the internal training/holdout split used for checkpoint selection. Consequently, the internal holdout was not completely isolated from preprocessing fitting. The official validation partition was transformed using the saved training-fitted preprocessing objects and was not used to fit those objects.
+
+5. **Simulator rather than physical hardware.** The noisy VQC result was obtained with Qiskit Aer and the organizer's QFF2026-v2 noise model. It is not a result from a physical quantum processor and does not capture every hardware effect, such as calibration drift, crosstalk, or time-dependent noise.
+
+6. **Single noisy evaluation run.** The reported 1.0000 noisy score is the result of the freshly executed 8,192-shot-per-example run. It should not be interpreted as a guarantee across other random seeds, noise realizations, or hardware devices.
+
+7. **Notebook and automated tests.** The saved notebook was structurally inspected: its cells have execution counts and no saved error outputs. This inspection is not equivalent to a fresh end-to-end execution in a clean kernel. The pytest suite was not run in the active environment because `pytest` was not installed.
 
 ## 7. Reproducibility
 
-```python
-# Fixed seeds across the entire pipeline
-SEED = 42
-np.random.seed(42)
+The project uses fixed random seeds in the relevant scripts (including seed 42 where configured). The following commands are the principal project reproduction entry points; run them from the project root with the project environment activated:
 
-# Reproduction commands:
-# 1. Classical baseline:
-#    python src/benchmarks/classical_baseline.py
-# 2. VQC Training (Ideal):
-#    python src/models/vqc_4qubit.py
-# 3. Task A (Bell State):
-#    python src/benchmarks/task_a_bell.py
-# 4. Task B (Processor D):
-#    python src/benchmarks/task_b_processor_d.py
-# 5. Noisy Evaluation:
-#    python src/models/vqc_noisy_evaluation.py
-# 6. Final Predictions & Official Validation:
-#    python src/models/generate_predictions.py
-# 7. Complete Automated Verification Suite (8 suites, 31 checks):
-#    python tests/run_all_tests.py
+```powershell
+# Dataset audit
+python src/data/dataset_audit.py
+
+# Ideal VQC training/evaluation
+python src/models/vqc_4qubit.py
+
+# Task A — official Bell-state helper
+python src/benchmarks/task_a_bell.py
+
+# Task B — Processor D configuration and benchmark
+python src/benchmarks/task_b_processor_d.py
+
+# Task B — independently invoke the official benchmark
+python "$env:QFF_KIT\benchmark\qff_qml_benchmark.py" configs\processor_d_config.json
+
+# Noisy VQC validation
+python -m src.models.vqc_noisy_evaluation
+
+# Generate final test predictions
+python src/models/generate_predictions.py
 ```
+
+The `QFF_KIT` environment variable in the Task B command is optional convenience notation; replace it with the actual challenge-kit path if it is not defined. The official benchmark was independently invoked using the challenge-kit path in this audit.
+
+## 8. Audit Notes
+
+- Dataset audit: 10 of 10 checks passed.
+- Task A: official helper executed independently twice; values reproduced.
+- Task B: official benchmark independently rerun; values reproduced.
+- Noisy VQC: fresh run completed; JSON and CSV metrics independently reconciled.
+- Prediction CSV: 1,500 rows, exactly the required `sample_id,label` columns, no missing values or duplicate IDs, and IDs in the same order as the test feature file. This structural check does not independently establish the prediction-generation provenance.
+- Automated pytest suite: not run because pytest was unavailable in the active environment.
+- The original noisy-evaluation JSON and CSV were backed up before the fresh run. The backup is retained under `outputs/metrics/noisy_evaluation_backup_20261030_041024/`.
 
 ---
 
-## 8. Optional Extensions & Ablation Studies
-
-### Ablation Study: Layer Count & Qubit Dimension Impact
-Conducted on identical training/validation splits with independent random seed isolation (5 epochs per variant):
-
-| Configuration | Qubits | Layers | Parameters | PCA Variance | Accuracy | Macro-F1 | Train Time | Scientific Conclusion |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1-Layer VQC** | 4 | 1 | 12 | 81.28% | 0.6713 | 0.5447 | 35.66 s | Underparameterized. 1 entangling layer cannot express the non-linear decision boundary. |
-| **2-Layer VQC (Baseline)** | 4 | 2 | 24 | 81.28% | 0.9973 | 0.9972 | 36.09 s | Optimal trade-off. Expressive enough for 99.8% accuracy while maintaining shallow depth (13). |
-| **3-Layer VQC** | 4 | 3 | 36 | 81.28% | 1.0000 | 1.0000 | 34.07 s | Achieves perfect Macro-F1 (1.000) on validation, but adds gate depth and physical noise exposure. |
-| **2-Qubit VQC (1 Layer)** | 2 | 1 | 6 | 69.30% | 0.7880 | 0.7450 | 7.83 s | Information loss from discarding 30.7% variance limits 1-layer classification performance. |
-| **2-Qubit VQC (2 Layers)** | 2 | 2 | 12 | 69.30% | 0.9993 | 0.9993 | 13.98 s | High expressivity; demonstrates that 2 qubits can separate the data when given 2 entangling layers. |
-
+**Overall conclusion:** The project has reproduced the required Task A and Task B organizer benchmarks and achieved perfect ideal and noisy-simulator validation scores for PS-Q1 on the supplied dataset. The strongest scientifically defensible conclusion is benchmark feasibility and observed performance under the specified simulator noise. The supplied data's unusually strong classical separability means these results do not establish a quantum advantage.
