@@ -11,6 +11,14 @@
 
 ---
 
+## 🎥 Project Demo Video
+
+<video src="https://raw.githubusercontent.com/Hashir4m4/NEXUS-OPS-QFF-2026-PHASE2/main/brag-output/brag.mp4" width="100%" autoplay muted loop playsinline controls>
+Your browser does not support embedded video. [Watch the NEXUS-OPS demo](brag-output/brag.mp4).
+</video>
+
+---
+
 ## 1. Executive Summary & Key Results
 
 NEXUS-OPS delivers an end-to-end, scientifically grounded, fully reproducible Quantum Machine Learning solution for classifying 30-feature electrocardiogram (ECG) heartbeats into Normal (`0`) or Arrhythmia (`1`).
