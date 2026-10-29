@@ -44,3 +44,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Brag video intermediate frame buffers
+brag-output/work/frames/
+brag-output/work/*.m4a
+
+

@@ -462,3 +462,4 @@ assert len(val_problems) == 0, f"Validation failed: {val_problems}"
 
 if __name__ == "__main__":
     build_solution_notebook()
+

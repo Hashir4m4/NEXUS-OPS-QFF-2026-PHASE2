@@ -36,3 +36,4 @@ def test_task_a_metrics():
     # Verify parity calculation formula
     expected_f = (1.0 + noisy["XX"] - noisy["YY"] + noisy["ZZ"]) / 4.0
     assert pytest.approx(noisy["fidelity"], abs=1e-5) == expected_f
+

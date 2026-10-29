@@ -39,3 +39,4 @@ def test_prediction_rows_and_format():
     counts = df["label"].value_counts()
     assert 700 <= counts[0] <= 1100, f"Normal count out of expected range: {counts[0]}"
     assert 400 <= counts[1] <= 800, f"Arrhythmia count out of expected range: {counts[1]}"
+

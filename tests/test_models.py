@@ -50,3 +50,4 @@ def test_vqc_performance_thresholds():
     assert ideal["accuracy"] >= 0.98, f"Ideal Accuracy too low: {ideal['accuracy']}"
     assert noisy["macro_f1"] >= 0.95, f"Noisy Macro-F1 too low: {noisy['macro_f1']}"
     assert noisy["accuracy"] >= 0.95, f"Noisy Accuracy too low: {noisy['accuracy']}"
+

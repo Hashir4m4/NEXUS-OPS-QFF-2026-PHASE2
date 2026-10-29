@@ -170,3 +170,4 @@ Conducted on identical training/validation splits using 5 epochs per variant:
 | **3-Layer VQC** | 4 | 3 | 36 | 81.28% | 1.0000 | 1.0000 | 105.61 s | Achieves perfect Macro-F1 (1.000) but triples training time and increases gate noise vulnerability. |
 | **2-Qubit VQC (1 Layer)** | 2 | 1 | 6 | 69.30% | 0.7960 | 0.7565 | 25.95 s | Information bottleneck from 2 PCA components limits classification. |
 | **2-Qubit VQC (2 Layers)** | 2 | 2 | 12 | 69.30% | 0.9993 | 0.9993 | 35.51 s | Surprising expressivity; shows that 2 qubits can separate the data if given 2 entangling layers. |
+

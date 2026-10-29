@@ -59,3 +59,4 @@ def test_angle_scaler_bounds():
     assert X_val_angles.shape == (1500, 4)
     assert np.all(X_val_angles >= 0.0), "Angles below 0.0 found"
     assert np.all(X_val_angles <= np.pi), "Angles exceeding pi found"
+

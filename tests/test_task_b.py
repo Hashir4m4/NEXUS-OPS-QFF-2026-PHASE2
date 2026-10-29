@@ -41,3 +41,4 @@ def test_processor_d_properties():
     assert b["qft3_fidelity_ideal"] == 1.0, f"Ideal QFT-3 fidelity must be 1.0, got {b['qft3_fidelity_ideal']}"
     assert 0.5 <= b["qft3_fidelity_noisy"] <= 0.8, f"Noisy QFT-3 fidelity unexpected: {b['qft3_fidelity_noisy']}"
     assert b["benchmark_noise_model_version"] == "QFF2026-v2"
+
