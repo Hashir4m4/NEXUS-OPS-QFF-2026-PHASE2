@@ -1,0 +1,63 @@
+{
+  "processor_id": "nexus_ops_ring4_v1",
+  "n_qubits": 4,
+  "coupling_map": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      2
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      0,
+      3
+    ]
+  ],
+  "native_gate_set": [
+    "rx",
+    "ry",
+    "rz",
+    "cx"
+  ],
+  "qubit_layout": "ring",
+  "noise_assumptions": {
+    "single_qubit_error_rate": 0.001,
+    "two_qubit_error_rate": 0.01,
+    "readout_error_rate": 0.015,
+    "t1_us": 120.0,
+    "t2_us": 90.0,
+    "notes": "Superconducting transmon processor with nearest-neighbor microwave resonators arranged in a 4-qubit planar ring."
+  },
+  "design_rationale": "Processor D is engineered as a 4-qubit bidirectional ring tailored to the NEXUS-OPS PS-Q1 biomedical signal classification pipeline. The 4 physical qubits directly correspond to our 4 principal component ECG features, retaining 81.3% of cumulative variance without wasted physical overhead. The closed ring topology matches the periodic nearest-neighbor entangling topology of StronglyEntanglingLayers, guaranteeing zero-SWAP overhead for all circular entangling operations in our classifier. The inclusion of bidirectional CX links eliminates the 4-Hadamard reversal cost (avoiding single-qubit error accumulation of p=0.01 per gate), and the low degree (d=2) minimizes inter-qubit frequency crowding and ZZ-crosstalk. For universal benchmark workloads like QFT-3, this topology incurs only a single routing SWAP while preserving high two-qubit execution fidelity.",
+  "benchmark_results": {
+    "qft3_circuit_depth_before_transpile": 6,
+    "qft3_circuit_depth_after_transpile": 21,
+    "qft3_two_qubit_gate_count": 12,
+    "qft3_swap_overhead": 1,
+    "qft3_fidelity_ideal": 1.0,
+    "qft3_fidelity_noisy": 0.626784,
+    "benchmark_noise_model_version": "QFF2026-v2"
+  }
+}

@@ -1,0 +1,37 @@
+{
+    "project": "NEXUS-OPS Phase 2 PS-Q1",
+    "train_shape": [
+        6000,
+        31
+    ],
+    "validation_shape": [
+        1500,
+        31
+    ],
+    "test_shape": [
+        1500,
+        31
+    ],
+    "feature_count": 30,
+    "training_class_distribution": {
+        "0": 3616,
+        "1": 2384
+    },
+    "validation_class_distribution": {
+        "0": 899,
+        "1": 601
+    },
+    "checks": {
+        "Training shape": true,
+        "Validation shape": true,
+        "Test shape": true,
+        "Training and validation columns match": true,
+        "Test feature columns match": true,
+        "Training labels valid": true,
+        "Validation labels valid": true,
+        "No missing values": true,
+        "No duplicate test IDs": true,
+        "Test IDs complete": true
+    },
+    "all_passed": true
+}

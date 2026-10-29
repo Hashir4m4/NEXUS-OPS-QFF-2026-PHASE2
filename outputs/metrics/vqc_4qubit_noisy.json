@@ -1,0 +1,90 @@
+{
+    "model": "4-qubit hybrid VQC",
+    "simulator": "Qiskit AerSimulator (noise_model=QFF2026-v2)",
+    "noise_condition": "noisy_benchmark",
+    "noise_model_version": "QFF2026-v2",
+    "single_qubit_depolarizing": 0.01,
+    "two_qubit_depolarizing": 0.05,
+    "readout_error": 0.02,
+    "shots_per_sample": 8192,
+    "dataset": "QFF2026 Phase 2 PS-Q1",
+    "seed": 42,
+    "qubits": 4,
+    "layers": 2,
+    "trainable_parameters": 24,
+    "circuit_depth_transpiled": 13,
+    "two_qubit_gate_count": 8,
+    "validation_samples": 1500,
+    "accuracy": 0.9966666666666667,
+    "macro_f1": 0.9965248673541869,
+    "macro_precision": 0.9972345132743363,
+    "macro_recall": 0.9958402662229617,
+    "confusion_matrix": [
+        [
+            899,
+            0
+        ],
+        [
+            5,
+            596
+        ]
+    ],
+    "classification_report": {
+        "Normal": {
+            "precision": 0.9944690265486725,
+            "recall": 1.0,
+            "f1-score": 0.9972268441486412,
+            "support": 899.0
+        },
+        "Arrhythmia": {
+            "precision": 1.0,
+            "recall": 0.9916805324459235,
+            "f1-score": 0.9958228905597326,
+            "support": 601.0
+        },
+        "accuracy": 0.9966666666666667,
+        "macro avg": {
+            "precision": 0.9972345132743363,
+            "recall": 0.9958402662229617,
+            "f1-score": 0.9965248673541869,
+            "support": 1500.0
+        },
+        "weighted avg": {
+            "precision": 0.9966851032448377,
+            "recall": 0.9966666666666667,
+            "f1-score": 0.9966643267440184,
+            "support": 1500.0
+        }
+    },
+    "simulation_time_seconds": 79.208,
+    "transpile_time_seconds": 31.962,
+    "total_time_seconds": 112.343,
+    "ideal_vs_noisy_comparison": {
+        "ideal_macro_f1": 0.9979160868371246,
+        "noisy_macro_f1": 0.9965248673541869,
+        "macro_f1_delta": -0.001391,
+        "ideal_accuracy": 0.998,
+        "noisy_accuracy": 0.9966666666666667,
+        "accuracy_delta": -0.001333,
+        "ideal_confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                3,
+                598
+            ]
+        ],
+        "noisy_confusion_matrix": [
+            [
+                899,
+                0
+            ],
+            [
+                5,
+                596
+            ]
+        ]
+    }
+}

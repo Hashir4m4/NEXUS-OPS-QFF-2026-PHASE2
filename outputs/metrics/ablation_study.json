@@ -1,0 +1,47 @@
+{
+    "1-Layer VQC (12 params)": {
+        "n_qubits": 4,
+        "n_layers": 1,
+        "trainable_parameters": 12,
+        "pca_explained_variance": 0.8128,
+        "accuracy": 0.6713,
+        "macro_f1": 0.5447,
+        "training_time_seconds": 15.09
+    },
+    "2-Layer VQC (24 params - Baseline)": {
+        "n_qubits": 4,
+        "n_layers": 2,
+        "trainable_parameters": 24,
+        "pca_explained_variance": 0.8128,
+        "accuracy": 0.996,
+        "macro_f1": 0.9958,
+        "training_time_seconds": 34.635
+    },
+    "3-Layer VQC (36 params)": {
+        "n_qubits": 4,
+        "n_layers": 3,
+        "trainable_parameters": 36,
+        "pca_explained_variance": 0.8128,
+        "accuracy": 1.0,
+        "macro_f1": 1.0,
+        "training_time_seconds": 105.609
+    },
+    "2-Qubit Subspace (PCA-2, 6 params)": {
+        "n_qubits": 2,
+        "n_layers": 1,
+        "trainable_parameters": 6,
+        "pca_explained_variance": 0.693,
+        "accuracy": 0.796,
+        "macro_f1": 0.7565,
+        "training_time_seconds": 25.949
+    },
+    "2-Qubit Subspace (PCA-2, 12 params)": {
+        "n_qubits": 2,
+        "n_layers": 2,
+        "trainable_parameters": 12,
+        "pca_explained_variance": 0.693,
+        "accuracy": 0.9993,
+        "macro_f1": 0.9993,
+        "training_time_seconds": 35.512
+    }
+}
