@@ -6,3 +6,4 @@ NEXUS-OPS Phase 2 release: An end-to-end Variational Quantum Classifier (VQC) an
 
 Option 3 (Short & Punchy):
 Your heart beats 100,000 times a day. We classified its arrhythmias with 4 entangled qubits and 99.8% accuracy — with zero false positives. 🫀⚛️ #QiskitFallFest2026 #QML #QuantumComputing
+

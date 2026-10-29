@@ -2,46 +2,66 @@
     "1-Layer VQC (12 params)": {
         "n_qubits": 4,
         "n_layers": 1,
+        "seed": 42,
+        "epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.03,
         "trainable_parameters": 12,
         "pca_explained_variance": 0.8128,
         "accuracy": 0.6713,
         "macro_f1": 0.5447,
-        "training_time_seconds": 15.09
+        "training_time_seconds": 35.663
     },
     "2-Layer VQC (24 params - Baseline)": {
         "n_qubits": 4,
         "n_layers": 2,
+        "seed": 42,
+        "epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.03,
         "trainable_parameters": 24,
         "pca_explained_variance": 0.8128,
-        "accuracy": 0.996,
-        "macro_f1": 0.9958,
-        "training_time_seconds": 34.635
+        "accuracy": 0.9973,
+        "macro_f1": 0.9972,
+        "training_time_seconds": 36.085
     },
     "3-Layer VQC (36 params)": {
         "n_qubits": 4,
         "n_layers": 3,
+        "seed": 42,
+        "epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.03,
         "trainable_parameters": 36,
         "pca_explained_variance": 0.8128,
         "accuracy": 1.0,
         "macro_f1": 1.0,
-        "training_time_seconds": 105.609
+        "training_time_seconds": 34.073
     },
     "2-Qubit Subspace (PCA-2, 6 params)": {
         "n_qubits": 2,
         "n_layers": 1,
+        "seed": 42,
+        "epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.03,
         "trainable_parameters": 6,
         "pca_explained_variance": 0.693,
-        "accuracy": 0.796,
-        "macro_f1": 0.7565,
-        "training_time_seconds": 25.949
+        "accuracy": 0.788,
+        "macro_f1": 0.745,
+        "training_time_seconds": 7.825
     },
     "2-Qubit Subspace (PCA-2, 12 params)": {
         "n_qubits": 2,
         "n_layers": 2,
+        "seed": 42,
+        "epochs": 5,
+        "batch_size": 64,
+        "learning_rate": 0.03,
         "trainable_parameters": 12,
         "pca_explained_variance": 0.693,
         "accuracy": 0.9993,
         "macro_f1": 0.9993,
-        "training_time_seconds": 35.512
+        "training_time_seconds": 13.982
     }
 }
