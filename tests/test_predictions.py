@@ -1,15 +1,21 @@
 """
 NEXUS-OPS | QFF 2026 Phase 2
 Automated Test Suite: Test Predictions and Official Validation
+Verifies:
+- predictions_q1.csv exists and matches schema.
+- Passes official tools/validate_predictions.py validator with 0 errors.
+- Correct row count (1500), sample_id format, and binary labels.
+- Balanced, reasonable class distribution.
 """
-from pathlib import Path
 import sys
+from pathlib import Path
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-sys.path.insert(0, str(KIT / "tools"))
+sys.path.insert(0, str(ROOT))
+
+from src.utils.config import get_tools_dir
+sys.path.insert(0, str(get_tools_dir()))
 
 from validate_predictions import validate
 
@@ -40,3 +46,9 @@ def test_prediction_rows_and_format():
     assert 700 <= counts[0] <= 1100, f"Normal count out of expected range: {counts[0]}"
     assert 400 <= counts[1] <= 800, f"Arrhythmia count out of expected range: {counts[1]}"
 
+
+if __name__ == "__main__":
+    test_prediction_file_exists()
+    test_official_prediction_validator()
+    test_prediction_rows_and_format()
+    print("All prediction validation tests passed successfully.")

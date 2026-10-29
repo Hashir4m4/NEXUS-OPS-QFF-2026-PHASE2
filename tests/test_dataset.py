@@ -1,14 +1,24 @@
 """
 NEXUS-OPS | QFF 2026 Phase 2
 Automated Test Suite: Dataset Integrity and Schema Validation
+Verifies:
+- Official PS-Q1 dataset files exist (ecg_train, ecg_val, ecg_test_features).
+- Row and column dimensions match official schema (6000 train, 1500 val, 1500 test).
+- Feature columns match 30 statistical features from 5 windows.
+- No missing / NaN values anywhere in the datasets.
+- Binary labels strictly in {0, 1}.
+- Test IDs are complete and unique across s0..s1499.
 """
+import sys
 from pathlib import Path
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-DATA = KIT / "data" / "q1"
+sys.path.insert(0, str(ROOT))
+
+from src.utils.config import get_dataset_dir
+
+DATA = get_dataset_dir("q1")
 
 
 def test_dataset_files_exist():
@@ -68,3 +78,12 @@ def test_test_sample_ids():
     assert not test["sample_id"].duplicated().any(), "Test contains duplicate sample IDs"
     assert actual_ids == expected_ids, "Test sample IDs mismatch expected s0..s1499"
 
+
+if __name__ == "__main__":
+    test_dataset_files_exist()
+    test_dataset_dimensions()
+    test_column_consistency()
+    test_no_missing_values()
+    test_label_validity()
+    test_test_sample_ids()
+    print("All dataset tests passed successfully.")

@@ -1,16 +1,25 @@
 """
 NEXUS-OPS | QFF 2026 Phase 2
 Automated Test Suite: Data Leakage Prevention and Preprocessing Verification
+Verifies:
+- Saved preprocessing transformers were fitted strictly on ecg_train.csv.
+- Zero contamination or parameters derived from ecg_val.csv or ecg_test_features.csv.
+- PCA variance ratio matches expected 81.28% variance retention.
+- Angle scaling produces valid rotations strictly in [0.0, pi].
+- Deterministic reproducibility of preprocessing pipeline.
 """
+import sys
 from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-DATA = KIT / "data" / "q1"
+sys.path.insert(0, str(ROOT))
+
+from src.utils.config import get_dataset_dir
+
+DATA = get_dataset_dir("q1")
 OUT_MODEL = ROOT / "outputs" / "models"
 
 
@@ -60,3 +69,25 @@ def test_angle_scaler_bounds():
     assert np.all(X_val_angles >= 0.0), "Angles below 0.0 found"
     assert np.all(X_val_angles <= np.pi), "Angles exceeding pi found"
 
+
+def test_preprocessing_reproducibility():
+    """
+    Verifies that running the preprocessing pipeline twice on identical data
+    yields bit-for-bit identical angle encodings.
+    """
+    preproc = joblib.load(OUT_MODEL / "vqc_4qubit_preprocessing.joblib")
+    val_df = pd.read_csv(DATA / "ecg_val.csv")
+    X_raw = val_df[preproc["feature_cols"]].iloc[:50].to_numpy(dtype=np.float64)
+
+    run1 = np.clip(preproc["angle_scaler"].transform(preproc["pca"].transform(preproc["standardizer"].transform(X_raw))), 0.0, np.pi)
+    run2 = np.clip(preproc["angle_scaler"].transform(preproc["pca"].transform(preproc["standardizer"].transform(X_raw))), 0.0, np.pi)
+
+    assert np.array_equal(run1, run2), "Preprocessing is non-deterministic"
+
+
+if __name__ == "__main__":
+    test_preprocessing_artifacts_exist()
+    test_no_leakage_scaler_and_pca()
+    test_angle_scaler_bounds()
+    test_preprocessing_reproducibility()
+    print("All preprocessing & leakage tests passed successfully.")

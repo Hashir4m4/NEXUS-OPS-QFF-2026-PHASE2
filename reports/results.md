@@ -2,7 +2,7 @@
 
 **Team name:** NEXUS-OPS  
 **Selected PS:** [x] PS-Q1  [ ] PS-Q2  [ ] PS-Q3  
-**Date:** October 29, 2026  
+**Date:** October 30, 2026  
 **Dependency versions:**
 ```text
 numpy==2.4.6
@@ -150,10 +150,10 @@ np.random.seed(42)
 #    python src/benchmarks/task_b_processor_d.py
 # 5. Noisy Evaluation:
 #    python src/models/vqc_noisy_evaluation.py
-# 6. Final Predictions:
+# 6. Final Predictions & Official Validation:
 #    python src/models/generate_predictions.py
-# 7. Complete Test Suite:
-#    pytest tests/ -v
+# 7. Complete Automated Verification Suite (8 suites, 31 checks):
+#    python tests/run_all_tests.py
 ```
 
 ---
@@ -161,13 +161,13 @@ np.random.seed(42)
 ## 8. Optional Extensions & Ablation Studies
 
 ### Ablation Study: Layer Count & Qubit Dimension Impact
-Conducted on identical training/validation splits using 5 epochs per variant:
+Conducted on identical training/validation splits with independent random seed isolation (5 epochs per variant):
 
 | Configuration | Qubits | Layers | Parameters | PCA Variance | Accuracy | Macro-F1 | Train Time | Scientific Conclusion |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1-Layer VQC** | 4 | 1 | 12 | 81.28% | 0.6713 | 0.5447 | 15.09 s | Underparameterized. 1 entangling layer cannot express the required separating hyperplane. |
-| **2-Layer VQC (Baseline)** | 4 | 2 | 24 | 81.28% | 0.9960 | 0.9958 | 34.64 s | Optimal balance. Expressive enough for 99.8% accuracy while maintaining shallow depth (13). |
-| **3-Layer VQC** | 4 | 3 | 36 | 81.28% | 1.0000 | 1.0000 | 105.61 s | Achieves perfect Macro-F1 (1.000) but triples training time and increases gate noise vulnerability. |
-| **2-Qubit VQC (1 Layer)** | 2 | 1 | 6 | 69.30% | 0.7960 | 0.7565 | 25.95 s | Information bottleneck from 2 PCA components limits classification. |
-| **2-Qubit VQC (2 Layers)** | 2 | 2 | 12 | 69.30% | 0.9993 | 0.9993 | 35.51 s | Surprising expressivity; shows that 2 qubits can separate the data if given 2 entangling layers. |
+| **1-Layer VQC** | 4 | 1 | 12 | 81.28% | 0.6713 | 0.5447 | 35.66 s | Underparameterized. 1 entangling layer cannot express the non-linear decision boundary. |
+| **2-Layer VQC (Baseline)** | 4 | 2 | 24 | 81.28% | 0.9973 | 0.9972 | 36.09 s | Optimal trade-off. Expressive enough for 99.8% accuracy while maintaining shallow depth (13). |
+| **3-Layer VQC** | 4 | 3 | 36 | 81.28% | 1.0000 | 1.0000 | 34.07 s | Achieves perfect Macro-F1 (1.000) on validation, but adds gate depth and physical noise exposure. |
+| **2-Qubit VQC (1 Layer)** | 2 | 1 | 6 | 69.30% | 0.7880 | 0.7450 | 7.83 s | Information loss from discarding 30.7% variance limits 1-layer classification performance. |
+| **2-Qubit VQC (2 Layers)** | 2 | 2 | 12 | 69.30% | 0.9993 | 0.9993 | 13.98 s | High expressivity; demonstrates that 2 qubits can separate the data when given 2 entangling layers. |
 

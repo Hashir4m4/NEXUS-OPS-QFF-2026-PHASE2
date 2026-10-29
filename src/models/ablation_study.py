@@ -4,10 +4,16 @@ Ablation Studies for PS-Q1 4-Qubit VQC
 Studies:
 1. Circuit Depth / Layer Count Ablation: 1 Layer vs 2 Layers vs 3 Layers
 2. Qubit / Subspace Dimension Ablation: 2 Qubits vs 4 Qubits
+
+Reproducibility Fix:
+- Explicit per-configuration seed isolation (eliminates global PRNG drift).
+- Preprocessing strictly fitted on training data with zero validation leakage.
+- Detailed parameterization, runtime, and metric provenance tracking.
 """
 from pathlib import Path
 import json
 import time
+import sys
 import numpy as np
 import pandas as pd
 import pennylane as qml
@@ -16,17 +22,25 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, f1_score
 
-SEED = 42
-np.random.seed(SEED)
-
 ROOT = Path(__file__).resolve().parents[2]
-KIT = ROOT.parent / "QFF2026_QML_Track" / "QFF2026_QML_Challenge_Kit"
-DATA = KIT / "data" / "q1"
+sys.path.insert(0, str(ROOT))
+
+from src.utils.config import get_dataset_dir
+
+DATA = get_dataset_dir("q1")
 OUT_METRICS = ROOT / "outputs" / "metrics"
 OUT_METRICS.mkdir(parents=True, exist_ok=True)
 
+DEFAULT_BASE_SEED = 42
 
-def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03):
+
+def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03, seed=DEFAULT_BASE_SEED):
+    """
+    Trains and evaluates a VQC configuration with independent PRNG isolation.
+    """
+    # Isolate random state for deterministic, order-independent execution
+    np.random.seed(seed)
+
     train_df = pd.read_csv(DATA / "ecg_train.csv")
     val_df = pd.read_csv(DATA / "ecg_val.csv")
 
@@ -41,7 +55,7 @@ def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03):
     X_tr_s = scaler.fit_transform(X_train_raw)
     X_v_s = scaler.transform(X_val_raw)
 
-    pca = PCA(n_components=n_qubits, random_state=SEED)
+    pca = PCA(n_components=n_qubits, random_state=seed)
     X_tr_pca = pca.fit_transform(X_tr_s)
     X_v_pca = pca.transform(X_v_s)
 
@@ -67,6 +81,7 @@ def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03):
         preds = predict_batch(bx, w)
         return pnp.mean((preds - by) ** 2)
 
+    # Weights initialized with isolated seed
     weights = pnp.array(0.05 * np.random.randn(n_layers, n_qubits, 3), requires_grad=True)
     optimizer = qml.AdamOptimizer(stepsize=lr)
 
@@ -82,7 +97,7 @@ def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03):
 
     train_time = round(time.time() - t0, 3)
 
-    # Evaluate
+    # Evaluate on validation set
     val_probs = np.concatenate([
         np.array(predict_batch(X_v_angles[k:k+256], weights))
         for k in range(0, len(X_v_angles), 256)
@@ -95,6 +110,10 @@ def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03):
     return {
         "n_qubits": n_qubits,
         "n_layers": n_layers,
+        "seed": seed,
+        "epochs": epochs,
+        "batch_size": batch_size,
+        "learning_rate": lr,
         "trainable_parameters": int(weights.size),
         "pca_explained_variance": round(explained_var, 4),
         "accuracy": round(acc, 4),
@@ -105,21 +124,26 @@ def train_eval_vqc(n_qubits, n_layers, epochs=5, batch_size=64, lr=0.03):
 
 def main():
     print("=" * 65)
-    print("NEXUS-OPS | VQC ABLATION EXPERIMENTS")
+    print("NEXUS-OPS | VQC ABLATION EXPERIMENTS (ISOLATED SEEDS)")
     print("=" * 65)
 
     experiments = [
-        {"name": "1-Layer VQC (12 params)", "qubits": 4, "layers": 1},
-        {"name": "2-Layer VQC (24 params - Baseline)", "qubits": 4, "layers": 2},
-        {"name": "3-Layer VQC (36 params)", "qubits": 4, "layers": 3},
-        {"name": "2-Qubit Subspace (PCA-2, 6 params)", "qubits": 2, "layers": 1},
-        {"name": "2-Qubit Subspace (PCA-2, 12 params)", "qubits": 2, "layers": 2},
+        {"name": "1-Layer VQC (12 params)", "qubits": 4, "layers": 1, "seed": 42},
+        {"name": "2-Layer VQC (24 params - Baseline)", "qubits": 4, "layers": 2, "seed": 42},
+        {"name": "3-Layer VQC (36 params)", "qubits": 4, "layers": 3, "seed": 42},
+        {"name": "2-Qubit Subspace (PCA-2, 6 params)", "qubits": 2, "layers": 1, "seed": 42},
+        {"name": "2-Qubit Subspace (PCA-2, 12 params)", "qubits": 2, "layers": 2, "seed": 42},
     ]
 
     results = {}
     for exp in experiments:
-        print(f"\nRunning ablation: {exp['name']}...")
-        res = train_eval_vqc(exp["qubits"], exp["layers"], epochs=5)
+        print(f"\nRunning ablation: {exp['name']} (Seed: {exp['seed']})...")
+        res = train_eval_vqc(
+            exp["qubits"],
+            exp["layers"],
+            epochs=5,
+            seed=exp["seed"]
+        )
         results[exp["name"]] = res
         print(f"  Accuracy: {res['accuracy']:.4f} | Macro-F1: {res['macro_f1']:.4f} | Time: {res['training_time_seconds']}s")
 
@@ -133,4 +157,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
