@@ -48,8 +48,25 @@ def create_circuit(n_qubits=N_QUBITS):
 
     @qml.qnode(dev, interface="autograd")
     def circuit(inputs, weights):
+        # State preparation via Y-rotations
         qml.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
-        qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
+
+        # Layer 1: Euler rotations + Forward Ring Entanglers (0->1->2->3->0)
+        for q in range(n_qubits):
+            qml.Rot(weights[0, q, 0], weights[0, q, 1], weights[0, q, 2], wires=q)
+        qml.CNOT(wires=[0, 1])
+        qml.CNOT(wires=[1, 2])
+        qml.CNOT(wires=[2, 3])
+        qml.CNOT(wires=[3, 0])
+
+        # Layer 2: Euler rotations + Reverse Ring Entanglers (1->0, 2->1, 3->2, 0->3)
+        for q in range(n_qubits):
+            qml.Rot(weights[1, q, 0], weights[1, q, 1], weights[1, q, 2], wires=q)
+        qml.CNOT(wires=[1, 0])
+        qml.CNOT(wires=[2, 1])
+        qml.CNOT(wires=[3, 2])
+        qml.CNOT(wires=[0, 3])
+
         return qml.expval(qml.PauliZ(0))
 
     return circuit
@@ -128,13 +145,26 @@ def main():
     print(f"  Trainable Parameters: {weights.size}")
     print(f"  Batch size: {BATCH_SIZE}, Learning rate: {LEARNING_RATE}, Epochs: {EPOCHS}")
 
-    # 4. Training Loop
+    # 4. Internal Validation Split (Strictly from ecg_train.csv - ecg_val.csv is NEVER touched during training)
+    np.random.seed(SEED)
+    perm_split = np.random.permutation(len(X_train_angles))
+    idx_tr = perm_split[:4800]
+    idx_internal_val = perm_split[4800:]
+
+    X_tr_sub = X_train_angles[idx_tr]
+    y_tr_sub = y_train_raw[idx_tr]
+    X_intval = X_train_angles[idx_internal_val]
+    y_intval = y_train_raw[idx_internal_val].astype(int)
+
+    print(f"\nInternal Training Split: {len(X_tr_sub)} train, {len(X_intval)} internal validation.")
+    print("Official ecg_val.csv (1,500 beats) remains completely untouched as an independent test set.")
+
     print("\nStarting optimization...")
     history = []
-    best_val_f1 = -1.0
+    best_int_f1 = -1.0
     best_weights = np.array(weights).copy()
 
-    n_samples = len(X_train_angles)
+    n_samples = len(X_tr_sub)
     train_start_time = time.time()
 
     for epoch in range(EPOCHS):
@@ -144,8 +174,8 @@ def main():
 
         for start_idx in range(0, n_samples, BATCH_SIZE):
             idx = perm[start_idx:start_idx + BATCH_SIZE]
-            bx = pnp.array(X_train_angles[idx], requires_grad=False)
-            by = pnp.array(y_train_raw[idx], requires_grad=False)
+            bx = pnp.array(X_tr_sub[idx], requires_grad=False)
+            by = pnp.array(y_tr_sub[idx], requires_grad=False)
 
             weights, b_loss = optimizer.step_and_cost(
                 lambda w: loss_fn(w, bx, by),
@@ -156,25 +186,25 @@ def main():
         avg_loss = float(np.mean(batch_losses))
         history.append(avg_loss)
 
-        # Validation at epoch end
-        val_probs = np.concatenate([
-            np.array(predict_batch(X_val_angles[k:k+256], weights))
-            for k in range(0, len(X_val_angles), 256)
+        # Checkpoint strictly against internal holdout (NEVER ecg_val.csv)
+        int_probs = np.concatenate([
+            np.array(predict_batch(X_intval[k:k+256], weights))
+            for k in range(0, len(X_intval), 256)
         ])
-        val_preds = (val_probs >= 0.5).astype(int)
-        val_f1 = float(f1_score(y_val, val_preds, average="macro"))
-        val_acc = float(accuracy_score(y_val, val_preds))
+        int_preds = (int_probs >= 0.5).astype(int)
+        int_f1 = float(f1_score(y_intval, int_preds, average="macro"))
+        int_acc = float(accuracy_score(y_intval, int_preds))
 
-        if val_f1 > best_val_f1:
-            best_val_f1 = val_f1
+        if int_f1 > best_int_f1:
+            best_int_f1 = int_f1
             best_weights = np.array(weights).copy()
 
         epoch_duration = time.time() - epoch_start
         print(
             f"Epoch {epoch+1:02d}/{EPOCHS} | "
             f"Train MSE: {avg_loss:.5f} | "
-            f"Val Acc: {val_acc:.4f} | "
-            f"Val Macro-F1: {val_f1:.4f} | "
+            f"Int Val Acc: {int_acc:.4f} | "
+            f"Int Val Macro-F1: {int_f1:.4f} | "
             f"Time: {epoch_duration:.2f}s"
         )
 

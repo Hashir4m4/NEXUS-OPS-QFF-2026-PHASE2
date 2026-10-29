@@ -8,16 +8,16 @@
     "qubits": 4,
     "layers": 2,
     "trainable_parameters": 24,
-    "accuracy": 0.9993333333333333,
-    "macro_f1": 0.9993057480818976,
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
     "confusion_matrix": [
         [
             899,
             0
         ],
         [
-            1,
-            600
+            0,
+            601
         ]
     ]
 }

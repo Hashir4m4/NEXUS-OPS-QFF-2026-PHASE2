@@ -54,7 +54,7 @@ def build_vqc_circuit(x, weights):
     for i in range(n_qubits):
         qc.ry(float(x[i]), i)
 
-    # Layer 0 (range 1 entangling)
+    # Layer 0 (forward ring entangling 0->1->2->3->0)
     for q in range(n_qubits):
         phi, theta, omega = weights[0, q]
         qc.rz(float(phi), q)
@@ -65,16 +65,16 @@ def build_vqc_circuit(x, weights):
     qc.cx(2, 3)
     qc.cx(3, 0)
 
-    # Layer 1 (range 2 entangling)
+    # Layer 1 (reverse ring entangling 1->0, 2->1, 3->2, 0->3)
     for q in range(n_qubits):
         phi, theta, omega = weights[1, q]
         qc.rz(float(phi), q)
         qc.ry(float(theta), q)
         qc.rz(float(omega), q)
-    qc.cx(0, 2)
-    qc.cx(1, 3)
-    qc.cx(2, 0)
-    qc.cx(3, 1)
+    qc.cx(1, 0)
+    qc.cx(2, 1)
+    qc.cx(3, 2)
+    qc.cx(0, 3)
 
     # Measure qubit 0 (corresponds to PennyLane PauliZ(0) expectation)
     qc.measure(0, 0)

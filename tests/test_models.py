@@ -81,7 +81,15 @@ def test_vqc_live_circuit_execution_consistency():
     @qml.qnode(dev)
     def circuit(x, w):
         qml.AngleEmbedding(x, wires=range(4), rotation="Y")
-        qml.StronglyEntanglingLayers(w, wires=range(4))
+        # NEXUS-Ring4 Ansatz
+        for i in range(4):
+            qml.Rot(w[0, i, 0], w[0, i, 1], w[0, i, 2], wires=i)
+        for i in range(4):
+            qml.CNOT(wires=[i, (i + 1) % 4])
+        for i in range(4):
+            qml.Rot(w[1, i, 0], w[1, i, 1], w[1, i, 2], wires=i)
+        for i in range(4):
+            qml.CNOT(wires=[(i + 1) % 4, i])
         return qml.expval(qml.PauliZ(0))
 
     live_exps = circuit(X_val_angles, weights)

@@ -76,7 +76,18 @@ def main():
     @qml.qnode(dev)
     def circuit(x, w):
         qml.AngleEmbedding(x, wires=range(4), rotation="Y")
-        qml.StronglyEntanglingLayers(w, wires=range(4))
+        for q in range(4):
+            qml.Rot(w[0, q, 0], w[0, q, 1], w[0, q, 2], wires=q)
+        qml.CNOT(wires=[0, 1])
+        qml.CNOT(wires=[1, 2])
+        qml.CNOT(wires=[2, 3])
+        qml.CNOT(wires=[3, 0])
+        for q in range(4):
+            qml.Rot(w[1, q, 0], w[1, q, 1], w[1, q, 2], wires=q)
+        qml.CNOT(wires=[1, 0])
+        qml.CNOT(wires=[2, 1])
+        qml.CNOT(wires=[3, 2])
+        qml.CNOT(wires=[0, 3])
         return qml.expval(qml.PauliZ(0))
 
     print("Running quantum inference across 1,500 test samples...")

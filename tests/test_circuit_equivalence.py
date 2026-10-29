@@ -25,7 +25,18 @@ def pl_circuit_factory(n_qubits=4):
     @qml.qnode(dev)
     def circuit(inputs, weights):
         qml.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
-        qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
+        for q in range(n_qubits):
+            qml.Rot(weights[0, q, 0], weights[0, q, 1], weights[0, q, 2], wires=q)
+        qml.CNOT(wires=[0, 1])
+        qml.CNOT(wires=[1, 2])
+        qml.CNOT(wires=[2, 3])
+        qml.CNOT(wires=[3, 0])
+        for q in range(n_qubits):
+            qml.Rot(weights[1, q, 0], weights[1, q, 1], weights[1, q, 2], wires=q)
+        qml.CNOT(wires=[1, 0])
+        qml.CNOT(wires=[2, 1])
+        qml.CNOT(wires=[3, 2])
+        qml.CNOT(wires=[0, 3])
         return qml.expval(qml.PauliZ(0))
 
     return circuit
@@ -37,7 +48,18 @@ def pl_statevector_factory(n_qubits=4):
     @qml.qnode(dev)
     def circuit(inputs, weights):
         qml.AngleEmbedding(inputs, wires=range(n_qubits), rotation="Y")
-        qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))
+        for q in range(n_qubits):
+            qml.Rot(weights[0, q, 0], weights[0, q, 1], weights[0, q, 2], wires=q)
+        qml.CNOT(wires=[0, 1])
+        qml.CNOT(wires=[1, 2])
+        qml.CNOT(wires=[2, 3])
+        qml.CNOT(wires=[3, 0])
+        for q in range(n_qubits):
+            qml.Rot(weights[1, q, 0], weights[1, q, 1], weights[1, q, 2], wires=q)
+        qml.CNOT(wires=[1, 0])
+        qml.CNOT(wires=[2, 1])
+        qml.CNOT(wires=[3, 2])
+        qml.CNOT(wires=[0, 3])
         return qml.state()
 
     return circuit

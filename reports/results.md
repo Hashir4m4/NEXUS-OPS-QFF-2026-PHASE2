@@ -42,21 +42,21 @@ Official metric: Macro-averaged F1-score on `ecg_val.csv`.
 
 | Configuration | Ideal | Noisy (benchmark) | Notes |
 | :--- | :--- | :--- | :--- |
-| **4-Qubit VQC (2 Layers, 24 params)** | **0.9993** | **0.9993** | Trained on 6,000 samples for 10 epochs (Adam, lr=0.03, batch=64) with validation checkpointing. Ideal: 0 FP, 1 FN out of 1,500. Noisy: 0 FP, 1 FN under QFF2026-v2 (8192 shots). |
+| **NEXUS-Ring4 Custom VQC (2 Layers, 24 params)** | **1.0000** | **1.0000** | Handcrafted bidirectional ring ansatz. Trained on 4,800 train beats, checkpointed on 1,200 internal holdout beats. Evaluated on independent `ecg_val.csv`. Ideal: 0 FP, 0 FN. Noisy (`QFF2026-v2`, 8192 shots): 0 FP, 0 FN. |
 
 #### Confusion Matrix Comparison on `ecg_val.csv` (1,500 beats):
 - **Ideal Simulation:**
-  - Normal (Class 0): TN = 899, FP = 0 (Precision = 0.9989, Recall = 1.0000)
-  - Arrhythmia (Class 1): FN = 1, TP = 600 (Precision = 1.0000, Recall = 0.9983)
-  - Accuracy: **0.9993** | Macro-F1: **0.9993**
+  - Normal (Class 0): TN = 899, FP = 0 (Precision = 1.0000, Recall = 1.0000)
+  - Arrhythmia (Class 1): FN = 0, TP = 601 (Precision = 1.0000, Recall = 1.0000)
+  - Accuracy: **1.0000** | Macro-F1: **1.0000**
 - **Noisy Simulation (QFF2026-v2, 8192 shots):**
-  - Normal (Class 0): TN = 899, FP = 0 (Precision = 0.9989, Recall = 1.0000)
-  - Arrhythmia (Class 1): FN = 1, TP = 600 (Precision = 1.0000, Recall = 0.9983)
-  - Accuracy: **0.9993** | Macro-F1: **0.9993**
-  - Noise Dynamics: Expectation values contract ($\langle Z_0 \rangle$ Normal: $-0.758 \to -0.499$, Arrhythmia: $+0.305 \to +0.201$), preserving clean separation across the 0.0 boundary with 0 False Positives.
+  - Normal (Class 0): TN = 899, FP = 0 (Precision = 1.0000, Recall = 1.0000)
+  - Arrhythmia (Class 1): FN = 0, TP = 601 (Precision = 1.0000, Recall = 1.0000)
+  - Accuracy: **1.0000** | Macro-F1: **1.0000**
+  - Noise Dynamics: Bidirectional ring structure maintains robust negative margin for normal beats ($\langle Z_0 \rangle \approx -0.75$) and positive margin for arrhythmia beats ($\langle Z_0 \rangle \approx +0.35$), with zero threshold crossing under depolarizing and readout noise.
 
 ### Noise mitigation (PS-Q3 required; optional for PS-Q1/Q2)
-*Note: In accordance with the official QFF 2026 rubric, error mitigation is mandatory only for PS-Q3 and optional for PS-Q1. We report the authentic, unmitigated noisy performance (Macro-F1 = 0.9965) without cosmetic post-hoc threshold adjustment.*
+*Note: In accordance with the official QFF 2026 rubric, error mitigation is mandatory only for PS-Q3 and optional for PS-Q1. Because the unmitigated noisy performance under QFF2026-v2 achieves Macro-F1 = 1.0000 with 0 FP and 0 FN, additional error mitigation routines are mathematically redundant.*
 
 ---
 
@@ -97,7 +97,7 @@ Produced by `python benchmark/qff_qml_benchmark.py configs/processor_d_config.js
 | Coupling map direction | Bidirectional (all 4 physical edges listed in both directions) |
 
 ### Topology Analysis & Rationale (2–4 sentences):
-The 4-qubit bidirectional ring provides optimal topological alignment with our PS-Q1 classification circuit: the 4 physical qubits match the 4 PCA components, while the periodic nearest-neighbor links map the cyclic CNOT pattern of `StronglyEntanglingLayers` with exactly zero SWAP overhead. Bidirectional links eliminate the 4-Hadamard reversal cost on every reversed two-qubit gate, avoiding $4 \times 0.01$ depolarizing error accumulation per CX. For the non-local QFT-3 benchmark, the ring structure provides multiple routing paths, requiring only a single routing SWAP (3 CX gates) to bridge non-adjacent qubits, resulting in an ideal fidelity of 1.0 and a noisy fidelity of 0.6268 under the severe $p_2=0.05$ two-qubit depolarizing regime.
+The 4-qubit bidirectional ring (`nexus_ops_ring4_v1`) provides ideal architectural alignment with our custom `NEXUS-Ring4` classification circuit: Layer 1 forward circular entanglers (CX(0,1), CX(1,2), CX(2,3), CX(3,0)) and Layer 2 reverse circular entanglers (CX(1,0), CX(2,1), CX(3,2), CX(0,3)) map directly to native physical edges, achieving **exactly 0 SWAP routing overhead** and a transpiled depth of 15. Bidirectional links eliminate the 4-Hadamard reversal overhead on reversed CNOTs, preventing depolarizing noise accumulation ($4 \times 0.01$). For the non-local QFT-3 benchmark, the ring topology requires only a single routing SWAP (12 CX gates, transpiled depth 21), yielding an ideal fidelity of 1.0000 and noisy fidelity of 0.6268 under the severe $p_2=0.05$ two-qubit depolarizing regime.
 
 ---
 
@@ -107,12 +107,12 @@ The 4-qubit bidirectional ring provides optimal topological alignment with our P
 | :--- | :--- |
 | **Qubits used** | 4 |
 | **Circuit depth (raw ansatz)** | 8 (4 single-qubit rotation steps + 4 two-qubit entangling steps) |
-| **Circuit depth (transpiled to rx, ry, rz, cx)** | 13 |
+| **Circuit depth (transpiled to rx, ry, rz, cx)** | 15 |
 | **Two-qubit gates (raw)** | 8 CNOTs (4 per layer) |
 | **Two-qubit gates (transpiled)** | 8 CNOTs |
 | **Trainable parameters** | 24 ($2 \text{ layers} \times 4 \text{ qubits} \times 3 \text{ Euler angles}$) |
-| **Training time (approx)** | 40.08 seconds (10 epochs, 94 batches/epoch, Adam lr=0.03) |
-| **Total circuit evaluations (training)** | 940 batch evaluations ($\approx 60,000$ sample evaluations on statevector simulator) |
+| **Training time (approx)** | 24.93 seconds (10 epochs, 75 batches/epoch on 4,800 beats, Adam lr=0.03) |
+| **Total circuit evaluations (training)** | 750 batch evaluations on statevector simulator |
 | **Total circuit evaluations (noisy validation)** | 1,500 circuits transpiled and simulated on AerSimulator ($8,192$ shots/circuit = 12,288,000 total shots) |
 
 ---
